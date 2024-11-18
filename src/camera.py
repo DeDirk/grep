@@ -1,4 +1,5 @@
 import pygame
+
 from src.constants import WINDOW, MOVEMENT
 
 class Camera:

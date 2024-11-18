@@ -1,7 +1,9 @@
-import pygame
 import math
 import random
 from typing import Tuple
+
+import pygame
+
 from src.constants import COLORS, EFFECTS
 
 class Particle:

@@ -1,7 +1,7 @@
-from src.game import Game
-
 import sys
 import traceback
+
+from src.game import Game
 
 def main():
     try:

@@ -1,7 +1,8 @@
-import pygame
 from typing import List, Dict, Tuple, Optional, Any
 import math
 import random
+
+import pygame
 
 def check_circle_collision(circle1: Dict, circle2: Dict) -> bool:
     """Check collision between two circles using their centers and radii"""
@@ -33,71 +34,60 @@ def check_wall_collisions(rect: pygame.Rect, walls: List[pygame.Rect]) -> Tuple[
     return False, None
 
 def resolve_wall_collision(old_pos: pygame.Rect, new_pos: pygame.Rect, walls: List[pygame.Rect]) -> pygame.Rect:
-    """Resolve collision with walls using a two-step approach and corner prediction"""
-    # First, try horizontal movement only
-    horizontal_pos = old_pos.copy()
-    horizontal_pos.x = new_pos.x
-    
-    # Then, try vertical movement only
-    vertical_pos = old_pos.copy()
-    vertical_pos.y = new_pos.y
-    
-    horizontal_collision = False
-    vertical_collision = False
-    
-    # Check for collisions in both directions
-    for wall in walls:
-        if horizontal_pos.colliderect(wall):
-            horizontal_collision = True
-        if vertical_pos.colliderect(wall):
-            vertical_collision = True
-    
-    # If no collision in either direction, allow full movement
-    if not horizontal_collision and not vertical_collision:
+    """Resolve collision with walls using continuous collision detection"""
+    # First check if there's any collision at all
+    if not any(new_pos.colliderect(wall) for wall in walls):
         return new_pos
-    
-    # If collision in only one direction, allow movement in the other
-    if horizontal_collision and not vertical_collision:
-        return vertical_pos
-    if vertical_collision and not horizontal_collision:
-        return horizontal_pos
-    
-    # If collision in both directions, check for corner cases
-    corner_buffer = 2  # Small buffer to prevent sticking
-    result_pos = old_pos.copy()
-    
-    # Try to slide along walls
-    if abs(new_pos.x - old_pos.x) > abs(new_pos.y - old_pos.y):
-        # Horizontal movement is larger, prioritize it
+
+    # Calculate movement vector
+    movement_x = new_pos.x - old_pos.x
+    movement_y = new_pos.y - old_pos.y
+
+    # If no movement, return current position
+    if movement_x == 0 and movement_y == 0:
+        return old_pos
+
+    # Try to find the furthest safe position using binary search
+    steps = 8  # Number of binary search steps (increase for more precision)
+    min_t = 0.0
+    max_t = 1.0
+    best_pos = old_pos.copy()
+
+    for _ in range(steps):
+        # Try a position halfway between min_t and max_t
+        t = (min_t + max_t) / 2
         test_pos = old_pos.copy()
-        test_pos.x = new_pos.x
-        
-        # Move slightly away from walls in vertical direction
-        if new_pos.y > old_pos.y:
-            test_pos.y = old_pos.y - corner_buffer
+        test_pos.x = old_pos.x + movement_x * t
+        test_pos.y = old_pos.y + movement_y * t
+
+        # Check if this position is safe
+        if any(test_pos.colliderect(wall) for wall in walls):
+            max_t = t  # Position caused collision, try earlier
         else:
-            test_pos.y = old_pos.y + corner_buffer
-            
-        # If this position is safe, use it
+            min_t = t  # Position was safe, try later
+            best_pos = test_pos.copy()
+
+    # Now we have the furthest safe position
+    result_pos = best_pos.copy()
+
+    # Try to slide along walls if we hit them
+    if min_t < 1.0:  # If we didn't reach the target position
+        remaining_x = movement_x * (1 - min_t)
+        remaining_y = movement_y * (1 - min_t)
+
+        # Try horizontal movement
+        test_pos = result_pos.copy()
+        test_pos.x += remaining_x
         if not any(test_pos.colliderect(wall) for wall in walls):
-            return test_pos
-    else:
-        # Vertical movement is larger, prioritize it
-        test_pos = old_pos.copy()
-        test_pos.y = new_pos.y
-        
-        # Move slightly away from walls in horizontal direction
-        if new_pos.x > old_pos.x:
-            test_pos.x = old_pos.x - corner_buffer
-        else:
-            test_pos.x = old_pos.x + corner_buffer
-            
-        # If this position is safe, use it
+            result_pos.x = test_pos.x
+
+        # Try vertical movement
+        test_pos = result_pos.copy()
+        test_pos.y += remaining_y
         if not any(test_pos.colliderect(wall) for wall in walls):
-            return test_pos
-    
-    # If all else fails, return to old position
-    return old_pos
+            result_pos.y = test_pos.y
+
+    return result_pos
 
 def line_intersects_rect(start: Tuple[float, float], end: Tuple[float, float], 
                         rect: pygame.Rect) -> bool:

@@ -1,8 +1,9 @@
-import pygame
 import random
 import threading
 from queue import Queue
 from typing import Dict, List, Set, Tuple
+
+import pygame
 
 from src.constants import (
     WINDOW,

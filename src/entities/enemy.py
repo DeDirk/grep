@@ -1,7 +1,8 @@
-import pygame
 import math
 import random
 from typing import Tuple, List
+
+import pygame
 
 from src.entities.projectile import Projectile
 from src.constants import (
@@ -527,6 +528,8 @@ class Enemy:
         # Calculate wall overlap
         wall_overlap = self.calculate_wall_overlap(walls)
         
+        # Amplify small wall_overlap values (e.g., ^0.5 makes 0.2 become ~0.447)
+        wall_overlap = pow(wall_overlap, 0.5)  # Square root makes small values larger
         # Calculate wall slowdown (lerp between 1.0 and wall_slowdown_factor)
         wall_multiplier = 1.0 - (wall_overlap * (1.0 - self.wall_slowdown_factor))
         

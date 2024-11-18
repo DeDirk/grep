@@ -1,8 +1,10 @@
-import pygame
 import math
 import random
 import traceback
 from typing import List
+
+import pygame
+
 from .particle import Particle
 from src.constants import COLORS, EFFECTS
 

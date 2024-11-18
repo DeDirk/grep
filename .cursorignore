@@ -3,7 +3,7 @@ dist
 oldfiles
 src/extras
 src/tests
-error_log.txt
 main.spec
 __pycache__/
 *.pyc
+**/__init__.py

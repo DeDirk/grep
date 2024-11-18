@@ -30,7 +30,7 @@ ENEMY = {
         'PHASE_3': 1000,
     },
     'WALL_INTERACTION': {
-        'SLOWDOWN_FACTOR': 0.2,
+        'SLOWDOWN_FACTOR': 0.001,
     },
     'PHASE_TRANSITION': {
         'DURATION': 1500,  # milliseconds
@@ -157,18 +157,18 @@ CONTROLLER = {
         'RIGHTBUMPER': 10,
     },
     'ACTIONS': {
-        'SHOOT': 'LEFTBUMPER',
-        'SPRINT': 'RIGHTBUMPER',
+        'SHOOT': 'RIGHTBUMPER',
+        'SPRINT': 'LEFTBUMPER',
         'ACTION': 'X',
         'MENU': 'START'
     },
     'INPUT': {
-        'STICK_DEADZONE': 0.15,
+        'STICK_DEADZONE': 0.01,
     },
     'RUMBLE': {
         'DURATION': 10,
-        'LOW_FREQ_MIN': 0.5,
-        'LOW_FREQ_MAX': 0.7,
+        'LOW_FREQ_MIN': 0.1,
+        'LOW_FREQ_MAX': 0.5,
         'HIGH_FREQ': 0.0,
     },
     'DEBUG': True
