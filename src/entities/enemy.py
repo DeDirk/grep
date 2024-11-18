@@ -152,9 +152,9 @@ class Enemy:
         
         # Phase 1 movements
         if self.state == "move_towards_player":
-            self.dash_toward_player(player_position, walls)
+            self.move_towards_player(player_position, walls)
         elif self.state == "sweep_towards_player":
-            self.dash_toward_player(player_position, walls)
+            self.sweep_towards_player(player_position, walls)
         elif self.state == "dash_toward_player":
             self.dash_toward_player(player_position, walls)
             
