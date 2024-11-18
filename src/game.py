@@ -23,6 +23,7 @@ from src.utils.collision import (
     handle_projectile_wall_collision
 )
 from src.effects.effect_manager import EffectManager
+from src.settings import Settings
 
 class Game:
     def __init__(self):
@@ -39,6 +40,7 @@ class Game:
         self.level_generator = LevelGenerator(WINDOW['WIDTH'], WINDOW['HEIGHT'])
 
         # Game settings
+        self.settings = Settings()
         self.item_spawn_chance = ITEMS['SPAWN']['CHANCE']
         
         # Camera
@@ -80,6 +82,11 @@ class Game:
         for event in pygame.event.get():
             if event.type == QUIT:
                 self.running = False
+            
+            # Check for key press to toggle dark mode
+            if event.type == KEYDOWN:
+                if event.key == K_l:  # Assuming 'D' key is used to toggle dark mode
+                    self.settings.toggle_dark_mode()
         
         if self.player.controls.is_shooting():
             projectile = self.player.shoot((self.camera.x, self.camera.y))
@@ -88,6 +95,7 @@ class Game:
         #         self.player.controls.start_rumble()
         
         # self.player.controls.update_rumble()
+        
 
     def update_projectiles(self):
         """Update all projectiles and handle collisions"""

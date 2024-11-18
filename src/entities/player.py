@@ -123,7 +123,8 @@ class Player:
         projectile = Projectile(
             self.rect.center, 
             direction,
-            speed=MOVEMENT['PROJECTILE']['PLAYER_SPEED']['BASE']
+            speed=MOVEMENT['PROJECTILE']['PLAYER_SPEED']['BASE'],
+            color=COLORS['BLACK']
         )
         projectile.from_enemy = False
         projectile.using_controller = using_controller

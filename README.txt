@@ -3,6 +3,8 @@ WASD : UP - LEFT - RIGHT - DOWN
 SHIFT : BOOST (WATCH STAMINA BAR ABOVE PLAYER)
 POINT AND CLICK WITH MOUSE TO SHOOT
 
+L = Toggle dark mode
+
 Controls Controller:
 Left stick: Movement
 Right stick: Aim

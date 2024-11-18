@@ -182,7 +182,7 @@ EFFECTS = {
         'SPREAD': 45,  # degrees
     },
     'WALL_HIT': {
-        'PARTICLE_COUNT': (5, 8),
+        'PARTICLE_COUNT': (5, 10),
         'LIFETIME': (15, 25),
         'SPEED': (3, 6),
         'SPREAD': 90,  # degrees

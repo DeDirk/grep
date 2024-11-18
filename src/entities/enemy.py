@@ -60,6 +60,9 @@ class Enemy:
         # Add game reference
         self.game = game
 
+        # Add a flag to track if the dash indicator has been shown
+        self.dash_indicator_shown = False
+
     def _init_movement_variables(self) -> None:
         """Initialize all movement-related variables"""
         # Sweep variables
@@ -464,10 +467,16 @@ class Enemy:
             if current_time - self.last_dash_time >= ENEMY['MOVEMENT']['DASH']['DURATION']:
                 self.dashing = False
                 self.last_dash_time = current_time
+                self.dash_indicator_shown = False  # Reset the indicator flag for the next dash
         else:
-            # Store original radius if we haven't yet
-            if not hasattr(self, 'original_radius'):
-                self.original_radius = self.radius
+            # Check if the dash indicator has been shown
+            if not self.dash_indicator_shown:
+                # Show dash indicator (e.g., change color or size)
+                if not hasattr(self, 'original_radius'):
+                    self.original_radius = self.radius
+                self.radius *= 1.5  # Example: increase size for the indicator
+                self.update_image()
+                self.dash_indicator_shown = True  # Set the flag to indicate the indicator has been shown
             
             # Calculate progress through pause duration (0 to 1)
             progress = (current_time - self.last_dash_time) / ENEMY['MOVEMENT']['DASH']['PAUSE_DURATION']
