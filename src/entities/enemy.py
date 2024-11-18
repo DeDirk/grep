@@ -152,9 +152,9 @@ class Enemy:
         
         # Phase 1 movements
         if self.state == "move_towards_player":
-            self.move_towards_player(player_position, walls)
+            self.dash_toward_player(player_position, walls)
         elif self.state == "sweep_towards_player":
-            self.sweep_towards_player(player_position, walls)
+            self.dash_toward_player(player_position, walls)
         elif self.state == "dash_toward_player":
             self.dash_toward_player(player_position, walls)
             
@@ -290,7 +290,7 @@ class Enemy:
         if current_time - self.last_predictive_shot_time >= self.predictive_shot_interval:
             # Get player velocity
             player_velocity = (self.game.player.velocity_x, self.game.player.velocity_y)
-            projectile_speed = MOVEMENT['PROJECTILE']['ENEMY_SPEED']['MIDDLE']
+            projectile_speed = MOVEMENT['PROJECTILE']['ENEMY_SPEED']['MOVEMENT_SIX']
             
             # Calculate intercept point
             predicted_pos = calculate_intercept_point(
@@ -374,7 +374,7 @@ class Enemy:
             current_speed = math.sqrt(self.velocity_x**2 + self.velocity_y**2)
             
             # Clamp to max speed (affected by multiplier)
-            max_speed = self.base_speed * speed_multiplier
+            max_speed = self.base_speed * (speed_multiplier + 0.1)
             if current_speed > max_speed:
                 scale = max_speed / current_speed
                 self.velocity_x *= scale
@@ -388,8 +388,7 @@ class Enemy:
         current_time = pygame.time.get_ticks()
         
         # Get speed multiplier based on distance
-        # speed_multiplier = self.calculate_speed_multiplier(player_position, walls)
-        speed_multiplier = 2.0
+        speed_multiplier = self.calculate_speed_multiplier(player_position, walls)
         
         # Update sweep direction every few seconds
         if not hasattr(self, 'last_sweep_change'):
@@ -409,7 +408,7 @@ class Enemy:
         sweep_offset = ENEMY['MOVEMENT']['SWEEP']['AMPLITUDE'] * self.sweep_direction
         
         # Calculate desired movement direction with distance-based speed
-        base_speed = ENEMY['MOVEMENT']['BASE_SPEED'] * 0.7 * speed_multiplier  # Apply multiplier to base speed
+        base_speed = ENEMY['MOVEMENT']['BASE_SPEED'] * 2 * (speed_multiplier) # Apply multiplier to base speed
         
         # Calculate perpendicular sweep movement
         sweep_x = -math.sin(angle_to_player) * sweep_offset * speed_multiplier  # Apply multiplier to sweep
@@ -444,11 +443,22 @@ class Enemy:
             dx = player_position[0] - self.rect.centerx
             dy = player_position[1] - self.rect.centery
             distance = math.hypot(dx, dy)
+            target_angle = math.atan2(dy, dx)
             
             if distance > 0:
-                # Normalize direction
-                direction_x = dx / distance
-                direction_y = dy / distance
+                # Initialize current_angle if it doesn't exist
+                if not hasattr(self, 'current_angle'):
+                    self.current_angle = target_angle
+                
+                # During dash: limit turning
+                angle_diff = (target_angle - self.current_angle + math.pi) % (2 * math.pi) - math.pi
+                max_turn_rate = math.pi / 128
+                clamped_diff = max(min(angle_diff, max_turn_rate), -max_turn_rate)
+                self.current_angle = (self.current_angle + clamped_diff) % (2 * math.pi)
+                
+                # Use current_angle for movement
+                direction_x = math.cos(self.current_angle)
+                direction_y = math.sin(self.current_angle)
                 
                 # Apply stronger acceleration during dash with distance multiplier
                 dash_acceleration = self.acceleration * 3 * speed_multiplier
@@ -456,19 +466,26 @@ class Enemy:
                 self.velocity_y += direction_y * dash_acceleration
                 
                 # Clamp to dash speed (also affected by distance)
-                max_dash_speed = MOVEMENT['ENEMY']['DASH_SPEED'] * speed_multiplier
+                max_dash_speed = MOVEMENT['ENEMY']['DASH_SPEED']
                 current_speed = math.sqrt(self.velocity_x**2 + self.velocity_y**2)
                 if current_speed > max_dash_speed:
                     scale = max_dash_speed / current_speed
                     self.velocity_x *= scale
                     self.velocity_y *= scale
             
-            # Switch to slow down after dash duration
             if current_time - self.last_dash_time >= ENEMY['MOVEMENT']['DASH']['DURATION']:
                 self.dashing = False
                 self.last_dash_time = current_time
-                self.dash_indicator_shown = False  # Reset the indicator flag for the next dash
+                self.dash_indicator_shown = False
         else:
+            # During pause: face directly towards player (no turn limit)
+            dx = player_position[0] - self.rect.centerx
+            dy = player_position[1] - self.rect.centery
+            distance = math.hypot(dx, dy)
+            
+            if distance > 0:
+                self.current_angle = math.atan2(dy, dx)  # Freely update angle during pause
+            
             # Check if the dash indicator has been shown
             if not self.dash_indicator_shown:
                 # Show dash indicator (e.g., change color or size)

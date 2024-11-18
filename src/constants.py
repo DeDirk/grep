@@ -82,7 +82,8 @@ MOVEMENT = {
         'ENEMY_SPEED': {
             'MIN': 15,
             'MAX': 40,
-            'MIDDLE': 10,  # For specific enemy types
+            'MIDDLE': 15,
+            'MOVEMENT_SIX': 10  # For specific enemy types
         },
         'INACCURACY': 0.1,  # Spread factor for projectile direction
     },
@@ -95,7 +96,7 @@ MOVEMENT = {
 # Player configuration
 PLAYER = {
     'STAMINA': {
-        'MAX': 18000000000,
+        'MAX': 180,
         'RECOVERY_RATE': 0.1,
         'EXHAUSTION_THRESHOLD': 0.3,  # 30% of max stamina
         'BAR': {
