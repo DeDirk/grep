@@ -25,7 +25,7 @@ ENEMY = {
         'MIDDLE_SHOOT_SPEED': 4
     },
     'HEALTH': {
-        'PHASE_1': 100,
+        'PHASE_1': 1000,
         'PHASE_2': 1000,
         'PHASE_3': 1000,
     },
@@ -45,7 +45,7 @@ COLORS = {
     'OTHER_RED': (197, 0, 0),
     'BLACK': (0, 0, 0),
     'GREEN': (0, 255, 0),
-    'GRAY': (200, 200, 200),
+    'GRAY': (128, 128, 128),
     'DARKGREY': (64, 64, 64),
     'YELLOW': (255, 255, 0),
     'PURPLE': (128, 0, 128),

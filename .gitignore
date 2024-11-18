@@ -7,3 +7,4 @@ error_log.txt
 main.spec
 __pycache__/
 *.pyc
+.cursorignore
