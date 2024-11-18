@@ -35,3 +35,8 @@ class Camera:
             rect.width,
             rect.height
         ) 
+
+    def apply_point(self, point):
+        """Apply camera offset to a point"""
+        return (point[0] - self.x, point[1] - self.y)
+        

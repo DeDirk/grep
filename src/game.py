@@ -84,10 +84,10 @@ class Game:
         if self.player.controls.is_shooting():
             projectile = self.player.shoot((self.camera.x, self.camera.y))
             self.projectiles.append(projectile)
-            if projectile.using_controller:
-                self.player.controls.start_rumble()
+        #     if projectile.using_controller:
+        #         self.player.controls.start_rumble()
         
-        self.player.controls.update_rumble()
+        # self.player.controls.update_rumble()
 
     def update_projectiles(self):
         """Update all projectiles and handle collisions"""

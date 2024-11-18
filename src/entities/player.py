@@ -41,6 +41,19 @@ class Player:
         # Add game reference
         self.game = game
 
+        self.current_speed = MOVEMENT['BASE_SPEED']
+
+    def get_current_speed(self) -> float:
+        """Calculate and return the player's current movement speed"""
+        base_speed = MOVEMENT['BASE_SPEED']
+        
+        if (self.controls.is_sprinting() and 
+            not self.is_exhausted and 
+            self.current_stamina > 0):
+            return base_speed * MOVEMENT['SPRINT_MULTIPLIER']
+        
+        return base_speed
+
     def move(self, visible_walls):
         # Decrease stamina bar visibility counter
         if self.stamina_bar_visible > 0:
@@ -48,10 +61,15 @@ class Player:
 
         x, y = self.controls.get_movement_vector()
         
-        # Handle sprinting
-        target_max_speed = MOVEMENT['BASE_SPEED']
+        # Get current speed based on sprint state
+        current_speed = self.get_current_speed()
+        
+        # Calculate velocities based on input and speed
+        self.velocity_x = x * current_speed
+        self.velocity_y = y * current_speed
+        
+        # Handle sprinting and stamina
         if self.controls.is_sprinting() and not self.is_exhausted and self.current_stamina > 0:
-            target_max_speed = MOVEMENT['BASE_SPEED'] * MOVEMENT['SPRINT_MULTIPLIER']
             self.current_stamina -= 1
             self.stamina_bar_visible = self.stamina_bar_fade_time
             if self.current_stamina <= 0:
@@ -74,16 +92,12 @@ class Player:
             if self.current_stamina >= self.max_stamina * PLAYER['STAMINA']['EXHAUSTION_THRESHOLD']:
                 self.is_exhausted = False
 
-        # Calculate movement
-        movement_x = x * target_max_speed
-        movement_y = y * target_max_speed
-        
         # Store old position for collision resolution
         old_pos = self.rect.copy()
         
-        # Update position
-        self.rect.x += movement_x
-        self.rect.y += movement_y
+        # Update position using velocities
+        self.rect.x += self.velocity_x
+        self.rect.y += self.velocity_y
         
         # Check and resolve wall collisions
         if visible_walls:

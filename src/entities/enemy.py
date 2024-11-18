@@ -12,6 +12,7 @@ from src.constants import (
     COLORS,
     SIZES
 )
+from src.utils.prediction import calculate_intercept_point
 
 class Enemy:
     def __init__(self, game):
@@ -146,7 +147,7 @@ class Enemy:
         self.update_state()
         new_projectiles = []
         
-        # Pass walls to movement methods
+        # Phase 1 movements
         if self.state == "move_towards_player":
             self.move_towards_player(player_position, walls)
         elif self.state == "sweep_towards_player":
@@ -160,7 +161,7 @@ class Enemy:
         elif self.state == "movement_5":
             new_projectiles = self.movement_5(player_position)
         elif self.state == "movement_6":
-            new_projectiles = self.movement_5(player_position)
+            new_projectiles = self.movement_6(player_position)
             
         # Phase 3 movements
         elif self.state == "movement_7":
@@ -272,7 +273,49 @@ class Enemy:
         return new_projectiles
 
     def movement_6(self, player_position):
-        pass  # Add your sixth movement pattern here
+        if not hasattr(self, 'last_predictive_shot_time'):
+            self.last_predictive_shot_time = pygame.time.get_ticks()
+            self.predictive_shot_interval = random.randint(800, 1500)
+
+        current_time = pygame.time.get_ticks()
+        new_projectiles = []
+        
+        # Use orbital movement similar to movement_5
+        orbit_angle = self.orbit_around_point(player_position, orbit_radius=300, rotation_speed=0.02)
+        
+        # Handle shooting with prediction
+        if current_time - self.last_predictive_shot_time >= self.predictive_shot_interval:
+            # Get player velocity
+            player_velocity = (self.game.player.velocity_x, self.game.player.velocity_y)
+            projectile_speed = MOVEMENT['PROJECTILE']['ENEMY_SPEED']['MIDDLE']
+            
+            # Calculate intercept point
+            predicted_pos = calculate_intercept_point(
+                (self.rect.centerx, self.rect.centery),
+                player_position,
+                player_velocity,
+                projectile_speed
+            )
+            
+            if predicted_pos:
+                # Calculate angle to predicted position
+                dx = predicted_pos[0] - self.rect.centerx
+                dy = predicted_pos[1] - self.rect.centery
+                angle = math.atan2(dy, dx)
+                
+                # Create predictive shot
+                new_projectiles.append(self.shoot(angle, speed=projectile_speed, color=COLORS['PURPLE']))
+            else:
+                # If no intercept possible, shoot directly at player
+                dx = player_position[0] - self.rect.centerx
+                dy = player_position[1] - self.rect.centery
+                angle = math.atan2(dy, dx)
+                new_projectiles.append(self.shoot(angle, speed=projectile_speed, color=COLORS['PURPLE']))
+            
+            self.last_predictive_shot_time = current_time
+            self.predictive_shot_interval = random.randint(800, 1500)
+        
+        return new_projectiles
 
     # Phase 3 movement methods
     def movement_7(self, player_position):
@@ -342,7 +385,8 @@ class Enemy:
         current_time = pygame.time.get_ticks()
         
         # Get speed multiplier based on distance
-        speed_multiplier = self.calculate_speed_multiplier(player_position, walls)
+        # speed_multiplier = self.calculate_speed_multiplier(player_position, walls)
+        speed_multiplier = 2.0
         
         # Update sweep direction every few seconds
         if not hasattr(self, 'last_sweep_change'):
@@ -532,7 +576,7 @@ class Enemy:
         wall_overlap = pow(wall_overlap, 0.5)  # Square root makes small values larger
         # Calculate wall slowdown (lerp between 1.0 and wall_slowdown_factor)
         wall_multiplier = 1.0 - (wall_overlap * (1.0 - self.wall_slowdown_factor))
-        
+
         # Combine multipliers
         return distance_multiplier * wall_multiplier
 

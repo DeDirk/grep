@@ -25,7 +25,7 @@ ENEMY = {
         'MIDDLE_SHOOT_SPEED': 4
     },
     'HEALTH': {
-        'PHASE_1': 1000,
+        'PHASE_1': 100,
         'PHASE_2': 1000,
         'PHASE_3': 1000,
     },
@@ -45,7 +45,7 @@ COLORS = {
     'OTHER_RED': (197, 0, 0),
     'BLACK': (0, 0, 0),
     'GREEN': (0, 255, 0),
-    'GRAY': (128, 128, 128),
+    'GRAY': (200, 200, 200),
     'DARKGREY': (64, 64, 64),
     'YELLOW': (255, 255, 0),
     'PURPLE': (128, 0, 128),
@@ -82,7 +82,7 @@ MOVEMENT = {
         'ENEMY_SPEED': {
             'MIN': 15,
             'MAX': 40,
-            'MIDDLE': 25,  # For specific enemy types
+            'MIDDLE': 10,  # For specific enemy types
         },
         'INACCURACY': 0.1,  # Spread factor for projectile direction
     },
@@ -95,7 +95,7 @@ MOVEMENT = {
 # Player configuration
 PLAYER = {
     'STAMINA': {
-        'MAX': 180,
+        'MAX': 18000000000,
         'RECOVERY_RATE': 0.1,
         'EXHAUSTION_THRESHOLD': 0.3,  # 30% of max stamina
         'BAR': {
