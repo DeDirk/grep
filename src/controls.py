@@ -10,6 +10,7 @@ class Controls:
         self.init_controllers()
         self.rumble_end_time = 0
         self.last_aim_direction = (1, 0)
+        self.menu_pressed = False
 
     def init_controllers(self):
         try:
@@ -182,3 +183,24 @@ class Controls:
                 except pygame.error:
                     pass
             self.rumble_end_time = 0
+
+    def get_menu_press(self):
+        """Get menu button press with state tracking"""
+        if not self.controllers:
+            return False
+            
+        try:
+            controller = self.controllers[0]
+            button_pressed = controller.get_button(CONTROLLER['BUTTONS']['START'])
+            
+            # Only return True on the initial press
+            if button_pressed and not self.menu_pressed:
+                self.menu_pressed = True
+                return True
+            elif not button_pressed:
+                self.menu_pressed = False
+                
+            return False
+        except Exception as e:
+            print(f"Menu button error: {e}")
+            return False

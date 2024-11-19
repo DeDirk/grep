@@ -43,7 +43,6 @@ class Projectile:
         """Update the projectile's image with current color"""
         self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
         current_color = COLORS[self.color_key]
-        print(f"Projectile color: {current_color}")  # Debug print
         pygame.draw.circle(self.image, current_color, (self.radius, self.radius), self.radius)
 
     def move(self):

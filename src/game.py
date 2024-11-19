@@ -90,7 +90,10 @@ class Game:
             if event.type == KEYDOWN:
                 if event.key == K_l:  # 'L' key is used to toggle dark mode
                     self.settings.toggle_dark_mode()
-                
+            
+        # Check controller start button for dark mode toggle
+        if self.player.controls.get_menu_press():  # Use new method
+            self.settings.toggle_dark_mode()
         
         if self.player.controls.is_shooting():
             projectile = self.player.shoot((self.camera.x, self.camera.y))
