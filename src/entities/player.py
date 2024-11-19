@@ -1,12 +1,10 @@
 import math
-
 import pygame
+import random
 
 from src.constants import (
     WINDOW,
     COLORS,
-    MOVEMENT,
-    SIZES,
     PLAYER
 )
 from src.entities.projectile import Projectile
@@ -16,9 +14,9 @@ from src.utils.collision import resolve_wall_collision
 
 class Player:
     def __init__(self, game):
-        self.radius = SIZES['PLAYER']['RADIUS']
-        self.image = pygame.Surface((SIZES['PLAYER']['RADIUS'] * 2, SIZES['PLAYER']['RADIUS'] * 2), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, COLORS['BLUE'], (SIZES['PLAYER']['RADIUS'], SIZES['PLAYER']['RADIUS']), SIZES['PLAYER']['RADIUS'])
+        self.radius = PLAYER['RADIUS']
+        self.image = pygame.Surface((PLAYER['RADIUS'] * 2, PLAYER['RADIUS'] * 2), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, COLORS['BLUE'], (PLAYER['RADIUS'], PLAYER['RADIUS']), PLAYER['RADIUS'])
         self.rect = self.image.get_rect()
         self.rect.center = (600, 400)
         self.died = 0
@@ -32,25 +30,28 @@ class Player:
         # Add velocity attributes
         self.velocity_x = 0
         self.velocity_y = 0
-        self.max_speed = MOVEMENT['BASE_SPEED']
-        self.acceleration = 1
-        self.deceleration = 1
+        self.max_speed = PLAYER['MOVEMENT']['BASE_SPEED']
+        self.acceleration = PLAYER['MOVEMENT']['ACCELERATION']
+        self.deceleration = PLAYER['MOVEMENT']['DECELERATION']
 
         self.controls = Controls()
 
         # Add game reference
         self.game = game
 
-        self.current_speed = MOVEMENT['BASE_SPEED']
+        self.current_speed = PLAYER['MOVEMENT']['BASE_SPEED']
+
+        self.max_health = PLAYER['HEALTH']['MAX']
+        self.current_health = self.max_health
 
     def get_current_speed(self) -> float:
         """Calculate and return the player's current movement speed"""
-        base_speed = MOVEMENT['BASE_SPEED']
+        base_speed = PLAYER['MOVEMENT']['BASE_SPEED']
         
         if (self.controls.is_sprinting() and 
             not self.is_exhausted and 
             self.current_stamina > 0):
-            return base_speed * MOVEMENT['SPRINT_MULTIPLIER']
+            return base_speed * PLAYER['MOVEMENT']['SPRINT_MULTIPLIER']
         
         return base_speed
 
@@ -119,12 +120,25 @@ class Player:
                 direction = (dx / length, dy / length)
             else:
                 direction = (1, 0)  # Default direction if length is 0
-            
+
+        # Add inaccuracy to direction
+        angle = math.atan2(direction[1], direction[0])
+        spread = random.uniform(-PLAYER['PROJECTILE']['INACCURACY'], PLAYER['PROJECTILE']['INACCURACY'])
+        angle += spread
+        direction = (math.cos(angle), math.sin(angle))
+        
+        # Create projectile config with speed variation
+        projectile_config = PLAYER['PROJECTILE'].copy()
+        speed_variation = random.uniform(
+            1 - PLAYER['PROJECTILE']['VARIATION'],
+            1 + PLAYER['PROJECTILE']['VARIATION']
+        )
+        projectile_config['SPEED'] *= speed_variation
+        
         projectile = Projectile(
             self.rect.center, 
             direction,
-            speed=MOVEMENT['PROJECTILE']['PLAYER_SPEED']['BASE'],
-            color=COLORS['BLACK']
+            projectile_config
         )
         projectile.from_enemy = False
         projectile.using_controller = using_controller
@@ -153,4 +167,20 @@ class Player:
                 fill_color = COLORS['GREEN']
             else:
                 fill_color = COLORS['RED']
+            pygame.draw.rect(surface, fill_color, (bar_x, bar_y, fill_width, bar_height))
+
+    def draw_health_bar(self, surface, camera):
+        if self.current_health < self.max_health:
+            # Bar dimensions
+            bar_width = 50
+            bar_height = 6
+            bar_x = camera.apply(self.rect).centerx - bar_width // 2
+            bar_y = camera.apply(self.rect).top - 20  # Position above stamina bar
+
+            # Background (empty) bar
+            pygame.draw.rect(surface, COLORS['BLACK'], (bar_x, bar_y, bar_width, bar_height))
+            
+            # Filled portion of bar
+            fill_width = int((self.current_health / self.max_health) * bar_width)
+            fill_color = COLORS['RED']
             pygame.draw.rect(surface, fill_color, (bar_x, bar_y, fill_width, bar_height))

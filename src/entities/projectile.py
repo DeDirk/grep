@@ -3,42 +3,35 @@ import random
 
 import pygame
 
-from src.constants import WINDOW, COLORS, SIZES, MOVEMENT
+from src.constants import WINDOW, COLORS
 
 class Projectile:
-    def __init__(self, position, direction, radius=SIZES['PROJECTILE']['RADIUS'], 
-                 speed=None, color=COLORS['BLACK']) -> None:
-        self.radius = radius
-        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, color, (self.radius, self.radius), self.radius)
-        
-        self.rect = self.image.get_rect()
-        self.rect.center = position
-
-        inaccuracy = MOVEMENT['PROJECTILE']['INACCURACY']
-        direction = (
-            direction[0] + random.uniform(-inaccuracy, inaccuracy),
-            direction[1] + random.uniform(-inaccuracy, inaccuracy)
-        )
-
-        magnitude = math.sqrt(direction[0] ** 2 + direction[1] ** 2)
-        self.direction = (direction[0] / magnitude, direction[1] / magnitude)
-        
-        if speed is None:
-            self.speed = random.uniform(
-                MOVEMENT['PROJECTILE']['ENEMY_SPEED']['MIN'],
-                MOVEMENT['PROJECTILE']['ENEMY_SPEED']['MAX']
-            )
-        else:
-            variation = MOVEMENT['PROJECTILE']['PLAYER_SPEED']['VARIATION']
-            self.speed = speed * (1 + random.uniform(-variation, variation))
-        
-        # Store velocity components
-        self.velocity = (self.direction[0] * self.speed, self.direction[1] * self.speed)
-            
-        self.from_enemy = True
+    def __init__(self, pos, direction, config):
+        """
+        Initialize a projectile
+        config: Dictionary containing projectile settings
+        """
+        self.radius = config['RADIUS']
+        self.speed = config['SPEED']
+        self.color = config['COLOR']
+        self.from_enemy = False
         self.hits = 0
-        self.max_hits = 25
+        self.max_hits = 1
+        
+        # Store damage and shrink settings if it's an enemy projectile
+        if 'DAMAGE_PER_FRAME' in config:
+            self.damage = config['DAMAGE_PER_FRAME']
+            self.shrink_rate = config['SHRINK_RATE']
+            self.min_size = config['MIN_SIZE']
+        
+        # Create rect and image
+        self.rect = pygame.Rect(pos[0] - self.radius, pos[1] - self.radius, 
+                             self.radius * 2, self.radius * 2)
+        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)
+        
+        # Calculate velocity
+        self.velocity = (direction[0] * self.speed, direction[1] * self.speed)
 
     def move(self):
         self.rect.move_ip(self.velocity[0], self.velocity[1])
@@ -52,3 +45,12 @@ class Projectile:
                 screen_pos[0] + self.rect.width < 0 or 
                 screen_pos[1] > WINDOW['HEIGHT'] or 
                 screen_pos[1] + self.rect.height < 0)
+
+    def update_rect_size(self):
+        """Update rect size based on current projectile radius"""
+        old_center = self.rect.center
+        self.rect.size = (self.radius * 2, self.radius * 2)
+        self.rect.center = old_center
+        # Update image size
+        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)

@@ -40,7 +40,7 @@ class Controls:
                 return False
                 
             if CONTROLLER['DEBUG'] and controller.get_button(button_id):
-                # print(f"Button pressed: {button_name} (ID: {button_id})")
+                print(f"Button pressed: {button_name} (ID: {button_id})")
                 pass
                 
             return controller.get_button(button_id)
@@ -53,10 +53,11 @@ class Controls:
         if pygame.mouse.get_pressed()[0]:  # Left click
             return True
         
-        # Check keyboard (optional, if you want a keyboard shoot button)
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:  # or whatever key you prefer
-            return True
+        # Check keyboard (optional, if you want a keyboard shoot button) 
+        # Aiming does not work when shooting with keyboard
+        # keys = pygame.key.get_pressed()
+        # if keys[pygame.K_SPACE]:  # or whatever key you prefer
+        #     return True
         
         # Check controller
         return self.get_button('SHOOT')

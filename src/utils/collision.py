@@ -4,6 +4,8 @@ import random
 
 import pygame
 
+from src.constants import ENEMY
+
 def check_circle_collision(circle1: Dict, circle2: Dict) -> bool:
     """Check collision between two circles using their centers and radii"""
     dx = circle1['x'] - circle2['x']
@@ -187,20 +189,39 @@ def handle_projectile_enemy_collision(projectile: Any, enemy: Any, effect_manage
         return True
     return False
 
+def handle_player_damage(player: Any, damage: int) -> None:
+    """Handle damaging the player and check for death"""
+    player.current_health -= damage
+    if player.current_health <= 0:
+        player.die()
+
 def handle_projectile_player_collision(projectile: Any, player: Any) -> bool:
     """Handle collision between projectile and player"""
-    if check_projectile_collision(create_circle_dict(projectile), create_circle_dict(player)):
-        player.die()
-        return True
+    if check_circle_collision(create_circle_dict(projectile), create_circle_dict(player)):
+        # Damage player using projectile's damage value
+        handle_player_damage(player, projectile.damage)
+        # Shrink projectile
+        projectile.radius *= projectile.shrink_rate
+        if projectile.radius <= projectile.min_size:
+            return True  # Remove projectile
+        # Update projectile rect size
+        projectile.update_rect_size()
+        return False
     return False
 
 def handle_player_enemy_collision(player: Any, enemy: Any) -> bool:
     """Handle collision between player and enemy"""
-    return check_circle_collision(create_circle_dict(player), create_circle_dict(enemy))
+    if check_circle_collision(create_circle_dict(player), create_circle_dict(enemy)):
+        handle_player_damage(player, ENEMY['PROJECTILE']['BASIC']['DAMAGE_PER_FRAME'])
+        return True
+    return False
 
 def handle_projectile_projectile_collision(projectile1: Any, projectile2: Any) -> bool:
-    """Handle collision between two projectiles"""
-    return check_circle_collision(create_circle_dict(projectile1), create_circle_dict(projectile2))
+    """Handle collision between two projectiles using circle collision"""
+    circle1 = create_circle_dict(projectile1)
+    circle2 = create_circle_dict(projectile2)
+    return check_circle_collision(circle1, circle2)
+
 
 def handle_item_player_collision(item: Any, player: Any) -> bool:
     """Check if the player collects an item"""

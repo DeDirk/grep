@@ -5,38 +5,6 @@ WINDOW = {
     'FPS': 60
 }
 
-# Enemy behavior configuration
-ENEMY = {
-    'MOVEMENT': {
-        'SWEEP': {
-            'AMPLITUDE': 6,
-            'FREQUENCY': 0.1,
-            'SPEED': 0.5,
-        },
-        'DASH': {
-            'DURATION': 500,
-            'PAUSE_DURATION': 700,
-            'SPEED': 12,
-        },
-        'SLOW': {
-            'SPEED': 3,
-        },
-        'BASE_SPEED': 3,
-        'MIDDLE_SHOOT_SPEED': 4
-    },
-    'HEALTH': {
-        'PHASE_1': 1000,
-        'PHASE_2': 1000,
-        'PHASE_3': 1000,
-    },
-    'WALL_INTERACTION': {
-        'SLOWDOWN_FACTOR': 0.001,
-    },
-    'PHASE_TRANSITION': {
-        'DURATION': 1500,  # milliseconds
-    }
-}
-
 # Colors for rendering
 COLORS = {
     'BLUE': (0, 0, 255),
@@ -52,62 +20,103 @@ COLORS = {
     'DARK_PURPLE': (64, 0, 64),
 }
 
-# Entity dimensions
-SIZES = {
-    'PLAYER': {
-        'RADIUS': 10,
-    },
-    'ENEMY': {
-        'RADIUS': 50,
-    },
-    'PROJECTILE': {
-        'RADIUS': 2,
-    }
-}
-
-# Movement and speed settings
-MOVEMENT = {
-    'BASE_SPEED': 5,
-    'SPRINT_MULTIPLIER': 2.0,
-    'ENEMY': {
-        'BASE_SPEED': 6,
-        'DASH_SPEED': 13,
-        'SLOW_SPEED': 3,
-    },
-    'PROJECTILE': {
-        'PLAYER_SPEED': {
-            'BASE': 15,  # Base speed for player projectiles
-            'VARIATION': 0.2,  # 20% variation in speed
-        },
-        'ENEMY_SPEED': {
-            'MIN': 15,
-            'MAX': 40,
-            'MIDDLE': 15,
-            'MOVEMENT_SIX': 10  # For specific enemy types
-        },
-        'INACCURACY': 0.1,  # Spread factor for projectile direction
-    },
-    'CAMERA': {
-        'LERP_SPEED': 0.1,
-        'DEADZONE': 100,
-    }
-}
-
 # Player configuration
 PLAYER = {
+    'RADIUS': 10,
+    'MOVEMENT': {
+        'BASE_SPEED': 5,
+        'SPRINT_MULTIPLIER': 2.0,
+        'ACCELERATION': 1,
+        'DECELERATION': 1,
+    },
+    'HEALTH': {
+        'MAX': 60,
+        'DAMAGE_PER_FRAME': 1,
+    },
     'STAMINA': {
         'MAX': 180,
         'RECOVERY_RATE': 0.1,
-        'EXHAUSTION_THRESHOLD': 0.3,  # 30% of max stamina
+        'EXHAUSTION_THRESHOLD': 0.3,
         'BAR': {
             'FADE_TIME': 30,
             'WIDTH': 40,
             'HEIGHT': 5,
             'OFFSET_Y': 10,
         }
+    },
+    'PROJECTILE': {
+        'RADIUS': 2,
+        'SPEED': 15,
+        'COLOR': COLORS['BLACK'],
+        'INACCURACY': 0.1,
+        'VARIATION': 0.1,
     }
 }
 
+# Enemy configuration
+ENEMY = {
+    'RADIUS': 50,
+    'HEALTH': {
+        'PHASE_1': 1000,
+        'PHASE_2': 1000,
+        'PHASE_3': 1000,
+    },
+    'MOVEMENT': {
+        'BASE_SPEED': 6,
+        'ACCELERATION': 2,
+        'DECELERATION': 2,
+        'DASH_SPEED': 13,
+        'SLOW_SPEED': 3,
+        'SWEEP': {
+            'AMPLITUDE': 6,
+            'FREQUENCY': 0.1,
+            'SPEED': 0.5,
+        },
+        'DASH': {
+            'DURATION': 500,
+            'PAUSE_DURATION': 700,
+            'SPEED': 12,
+        },
+    },
+    'PROJECTILE': {
+        'BASIC': {
+            'RADIUS': 20,
+            'SPEED': 15,
+            'COLOR': COLORS['RED'],
+            'DAMAGE_PER_FRAME': 1,
+            'SHRINK_RATE': 0.8,
+            'MIN_SIZE': 1,
+        },
+        'PHASE_TWO': {
+            'RADIUS': 30,
+            'SPEED': 4,
+            'COLOR': COLORS['DARK_PURPLE'],
+            'DAMAGE_PER_FRAME': 8,
+            'SHRINK_RATE': 0.9,
+            'MIN_SIZE': 2,
+        },
+        'PREDICTIVE': {
+            'RADIUS': 25,
+            'SPEED': 10,
+            'COLOR': COLORS['PURPLE'],
+            'DAMAGE_PER_FRAME': 10,
+            'SHRINK_RATE': 0.85,
+            'MIN_SIZE': 1,
+        }
+    },
+    'WALL_INTERACTION': {
+        'SLOWDOWN_FACTOR': 0.001,
+    },
+    'PHASE_TRANSITION': {
+        'DURATION': 1500,
+    }
+}
+
+# Camera settings
+CAMERA = {
+    'LERP_SPEED': 0.1,
+    'DEADZONE': 100,
+}
 # Item settings
 ITEMS = {
     'SPAWN': {
@@ -172,7 +181,7 @@ CONTROLLER = {
         'LOW_FREQ_MAX': 0.5,
         'HIGH_FREQ': 0.0,
     },
-    'DEBUG': True
+    'DEBUG': False
 }
 
 EFFECTS = {

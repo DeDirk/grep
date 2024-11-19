@@ -4,7 +4,7 @@ oldfiles
 src/extras
 src/tests
 error_log.txt
-main.spec
+*.spec
 __pycache__/
 *.pyc
 .cursorignore

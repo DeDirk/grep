@@ -7,17 +7,15 @@ import pygame
 from src.entities.projectile import Projectile
 from src.constants import (
     WINDOW,
-    MOVEMENT,
     ENEMY,
-    COLORS,
-    SIZES
+    COLORS
 )
 from src.utils.prediction import calculate_intercept_point
 
 class Enemy:
     def __init__(self, game):
         # Basic setup
-        self.radius = SIZES['ENEMY']['RADIUS']
+        self.radius = ENEMY['RADIUS']
         self.image = None
         self.rect = None
         self.update_image()
@@ -25,8 +23,8 @@ class Enemy:
         # Add velocity attributes
         self.velocity_x = 0
         self.velocity_y = 0
-        self.acceleration = 2
-        self.deceleration = 2
+        self.acceleration = ENEMY['MOVEMENT']['ACCELERATION']
+        self.deceleration = ENEMY['MOVEMENT']['DECELERATION']
         
         # Phase management
         self.current_phase = 1
@@ -53,10 +51,7 @@ class Enemy:
         # Movement-specific variables
         self._init_movement_variables()
 
-        # Add to existing initialization
-        self.base_speed = MOVEMENT['ENEMY']['BASE_SPEED']  # Store original speed
-        self.wall_slowdown_factor = ENEMY['WALL_INTERACTION']['SLOWDOWN_FACTOR']  # Speed multiplier when fully in wall
-
+        
         # Add game reference
         self.game = game
 
@@ -65,14 +60,20 @@ class Enemy:
 
     def _init_movement_variables(self) -> None:
         """Initialize all movement-related variables"""
-        # Sweep variables
+        # Wall slowdown factor (movement 1)	
+        self.wall_slowdown_factor = ENEMY['WALL_INTERACTION']['SLOWDOWN_FACTOR']
+
+        # Base speed (movement 1)
+        self.base_speed = ENEMY['MOVEMENT']['BASE_SPEED']
+
+        # Sweep variables (movement 2)
         self.sweep_offset = 0
         self.sweep_direction = 1
         self.sweep_frame_counter = 0
         self.sweep_frequency = ENEMY['MOVEMENT']['SWEEP']['FREQUENCY']
         self.sweep_speed = ENEMY['MOVEMENT']['SWEEP']['SPEED']
 
-        # Dash variables
+        # Dash variables (movement 3)   
         self.dashing = True
         self.last_dash_time = pygame.time.get_ticks()
         self.dash_angle = 0
@@ -80,11 +81,16 @@ class Enemy:
         self.dash_duration = ENEMY['MOVEMENT']['DASH']['DURATION']
         self.dash_pause_duration = ENEMY['MOVEMENT']['DASH']['PAUSE_DURATION']
 
-        # Middle shoot variables
+        # Middle shoot variables (movement 4)
         self.next_shot_interval = random.randint(800, 1200)
         self.initial_angle = 0
         self.circle_start_time = 0
         self.last_shot_time = 0
+
+        # Movement 5 variables
+
+        # Movement 6 variables
+        
 
     def take_damage(self, damage):
         self.current_health -= damage
@@ -205,7 +211,7 @@ class Enemy:
         if dist > 0:
             # Smoothly adjust speed based on distance
             speed_factor = min(dist / 100, 1.5)
-            move_speed = MOVEMENT['ENEMY']['DASH_SPEED'] * speed_factor
+            move_speed = ENEMY['MOVEMENT']['DASH']['SPEED'] * speed_factor
             
             # Add slight prediction to movement
             prediction_factor = 0.2
@@ -227,19 +233,14 @@ class Enemy:
         current_time = pygame.time.get_ticks()
         new_projectiles = []
         
-        # Use the orbital movement helper
         orbit_angle = self.orbit_around_point(player_position)
         
-        # Handle shooting
         if current_time - self.last_shot_time >= self.next_shot_interval:
             for i in range(8):
                 shot_angle = (i * math.pi / 4) + orbit_angle
-                direction = (math.cos(shot_angle), math.sin(shot_angle))
-                new_projectiles.append(
-                    Projectile(self.rect.center, direction, radius=30, 
-                             speed=ENEMY['MOVEMENT']['MIDDLE_SHOOT_SPEED'], 
-                             color=COLORS['DARK_PURPLE'])
-                )
+                projectile = self.shoot(shot_angle, 'PHASE_TWO')
+                new_projectiles.append(projectile)
+                
             self.last_shot_time = current_time
             self.next_shot_interval = random.randint(500, 1500)
         
@@ -268,7 +269,7 @@ class Enemy:
             for i in range(3):
                 spread = (i - 1) * 0.2  # This creates a spread of -0.2, 0, and 0.2 radians
                 shot_angle = base_angle + spread
-                new_projectiles.append(self.shoot(shot_angle, speed=3, color=COLORS['DARK_PURPLE']))
+                new_projectiles.append(self.shoot(shot_angle, 'PHASE_THREE'))
                 
             self.last_triple_shot_time = current_time
             self.triple_shot_interval = random.randint(500, 1000)  # Randomize next interval
@@ -290,7 +291,7 @@ class Enemy:
         if current_time - self.last_predictive_shot_time >= self.predictive_shot_interval:
             # Get player velocity
             player_velocity = (self.game.player.velocity_x, self.game.player.velocity_y)
-            projectile_speed = MOVEMENT['PROJECTILE']['ENEMY_SPEED']['MOVEMENT_SIX']
+            projectile_speed = ENEMY['PROJECTILE']['PREDICTIVE']['SPEED']
             
             # Calculate intercept point
             predicted_pos = calculate_intercept_point(
@@ -307,13 +308,13 @@ class Enemy:
                 angle = math.atan2(dy, dx)
                 
                 # Create predictive shot
-                new_projectiles.append(self.shoot(angle, speed=projectile_speed, color=COLORS['PURPLE']))
+                new_projectiles.append(self.shoot(angle, 'PHASE_THREE'))
             else:
                 # If no intercept possible, shoot directly at player
                 dx = player_position[0] - self.rect.centerx
                 dy = player_position[1] - self.rect.centery
                 angle = math.atan2(dy, dx)
-                new_projectiles.append(self.shoot(angle, speed=projectile_speed, color=COLORS['PURPLE']))
+                new_projectiles.append(self.shoot(angle, 'PHASE_THREE'))
             
             self.last_predictive_shot_time = current_time
             self.predictive_shot_interval = random.randint(800, 1500)
@@ -330,11 +331,18 @@ class Enemy:
     def movement_9(self, player_position):
         pass  # Add your ninth movement pattern here
     
-    def shoot(self, angle, radius=30, speed=3, color=COLORS['OTHER_RED']):
-        # Convert angle to direction vector using trigonometry
+    def shoot(self, angle, projectile_type='BASIC'):
+        """
+        Create a projectile with the specified configuration
+        """
         direction = (math.cos(angle), math.sin(angle))
-        # Create and return a new projectile from enemy's center position
-        return Projectile(self.rect.center, direction, radius=radius, speed=speed, color=color)
+        projectile = Projectile(
+            self.rect.center,
+            direction,
+            ENEMY['PROJECTILE']['PREDICTIVE']
+        )
+        projectile.from_enemy = True
+        return projectile
 
     def update_image(self, color=None):
         """Update the surface and redraw the circle."""
@@ -408,7 +416,7 @@ class Enemy:
         sweep_offset = ENEMY['MOVEMENT']['SWEEP']['AMPLITUDE'] * self.sweep_direction
         
         # Calculate desired movement direction with distance-based speed
-        base_speed = ENEMY['MOVEMENT']['BASE_SPEED'] * 2 * (speed_multiplier) # Apply multiplier to base speed
+        base_speed = ENEMY['MOVEMENT']['BASE_SPEED'] * 1 * (speed_multiplier) # Apply multiplier to base speed
         
         # Calculate perpendicular sweep movement
         sweep_x = -math.sin(angle_to_player) * sweep_offset * speed_multiplier  # Apply multiplier to sweep
@@ -466,7 +474,7 @@ class Enemy:
                 self.velocity_y += direction_y * dash_acceleration
                 
                 # Clamp to dash speed (also affected by distance)
-                max_dash_speed = MOVEMENT['ENEMY']['DASH_SPEED']
+                max_dash_speed = ENEMY['MOVEMENT']['DASH']['SPEED']
                 current_speed = math.sqrt(self.velocity_x**2 + self.velocity_y**2)
                 if current_speed > max_dash_speed:
                     scale = max_dash_speed / current_speed

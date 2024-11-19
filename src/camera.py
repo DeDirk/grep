@@ -1,13 +1,13 @@
 import pygame
 
-from src.constants import WINDOW, MOVEMENT
+from src.constants import WINDOW, CAMERA
 
 class Camera:
     def __init__(self):
         self.x = 0
         self.y = 0
-        self.lerp_speed = MOVEMENT['CAMERA']['LERP_SPEED']
-        self.deadzone = MOVEMENT['CAMERA']['DEADZONE']
+        self.lerp_speed = CAMERA['LERP_SPEED']
+        self.deadzone = CAMERA['DEADZONE']
         
     def update(self, player_rect):
         screen_x = player_rect.centerx - self.x

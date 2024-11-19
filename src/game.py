@@ -8,10 +8,14 @@ from src.constants import (
     COLORS,
     WINDOW,
     LEVEL,
-    ITEMS
+    ITEMS,
+    PLAYER,
+    ENEMY
 )
 from src.camera import Camera
-from src.entities import Enemy, Player, Projectile
+from src.entities.enemy import Enemy
+from src.entities.player import Player
+from src.entities.projectile import Projectile
 from src.items.item import Item
 from src.level_generator import LevelGenerator
 from src.utils.collision import (
@@ -64,8 +68,7 @@ class Game:
             self.update_projectiles()
             
             # Check player-enemy collision
-            if handle_player_enemy_collision(self.player, self.enemy):
-                self.player.die()
+            handle_player_enemy_collision(self.player, self.enemy)
             
             self.camera.update(self.player.rect)
             self.level_generator.update(self.camera.x, self.camera.y)
@@ -85,8 +88,9 @@ class Game:
             
             # Check for key press to toggle dark mode
             if event.type == KEYDOWN:
-                if event.key == K_l:  # Assuming 'D' key is used to toggle dark mode
+                if event.key == K_l:  # 'L' key is used to toggle dark mode
                     self.settings.toggle_dark_mode()
+                
         
         if self.player.controls.is_shooting():
             projectile = self.player.shoot((self.camera.x, self.camera.y))
@@ -102,7 +106,9 @@ class Game:
         visible_walls = self.level_generator.get_visible_walls(self.camera.x, self.camera.y)
         
         # Update all projectiles
-        for i, projectile in enumerate(self.projectiles[:]):
+        i = 0
+        while i < len(self.projectiles):
+            projectile = self.projectiles[i]
             projectile.move()
             
             # Check collision with walls
@@ -111,16 +117,33 @@ class Game:
                     break
             
             # Check collision with other projectiles
-            for other_projectile in self.projectiles[i+1:]:  # Check against remaining projectiles
-                if (not projectile.from_enemy and other_projectile.from_enemy and  # Only player projectiles can hit enemy projectiles
-                    handle_projectile_projectile_collision(projectile, other_projectile)):
-                    other_projectile.hits += 1
-                    if other_projectile.hits >= other_projectile.max_hits:
-                        if other_projectile in self.projectiles:
-                            self.projectiles.remove(other_projectile)
-                    if projectile in self.projectiles:
-                        self.projectiles.remove(projectile)
-                    break
+            j = 0
+            while j < len(self.projectiles):
+                if i != j:  # Don't compare projectile with itself
+                    other_projectile = self.projectiles[j]
+                    if (not projectile.from_enemy and 
+                        other_projectile.from_enemy and 
+                        handle_projectile_projectile_collision(projectile, other_projectile)):
+                        # Remove player projectile
+                        if projectile in self.projectiles:
+                            self.projectiles.remove(projectile)
+                            i -= 1
+                        # Shrink enemy projectile
+                        other_projectile.radius *= other_projectile.shrink_rate
+                        if other_projectile.radius <= other_projectile.min_size:
+                            if other_projectile in self.projectiles:
+                                self.projectiles.remove(other_projectile)
+                                if j < i:
+                                    i -= 1
+                        else:
+                            other_projectile.update_rect_size()
+                        break
+                j += 1
+            
+            # Skip remaining checks if projectile was removed
+            if projectile not in self.projectiles:
+                i += 1
+                continue
             
             # Check collision with enemy (if player projectile)
             if not projectile.from_enemy:
@@ -131,15 +154,16 @@ class Game:
             
             # Check collision with player (if enemy projectile)
             if projectile.from_enemy:
-                if handle_projectile_player_collision(projectile, self.player):
-                    if projectile in self.projectiles:
-                        self.projectiles.remove(projectile)
+                should_remove = handle_projectile_player_collision(projectile, self.player)
+                if should_remove and projectile in self.projectiles:
+                    self.projectiles.remove(projectile)
                     continue
             
             # Remove if off screen
             if projectile.is_off_screen(self.camera):
                 if projectile in self.projectiles:
                     self.projectiles.remove(projectile)
+            i += 1
 
     def update_items(self):
         for item in self.items[:]:
@@ -225,11 +249,13 @@ class Game:
         player_rect = self.camera.apply(self.player.rect)
         enemy_rect = self.camera.apply(self.enemy.rect)
         
-        self.screen.blit(self.player.image, player_rect)
         self.screen.blit(self.enemy.image, enemy_rect)
+        self.screen.blit(self.player.image, player_rect)
         
-        # Draw stamina bar with camera
+        # Draw stamina bar
         self.player.draw_stamina_bar(self.screen, self.camera)
+        # draw health bar
+        self.player.draw_health_bar(self.screen, self.camera)
         
         for projectile in self.projectiles:
             proj_rect = self.camera.apply(projectile.rect)
@@ -251,8 +277,8 @@ class Game:
         font = pygame.font.SysFont("Verdana", 60)
         game_over = font.render("you died fuckface", True, COLORS['RED'])
         self.screen.blit(game_over, (random.randint(27, 30), random.randint(247,250)))
-        eoe = font.render("!!!!!!!!!", True, COLORS['RED'])
-        self.screen.blit(eoe, (random.randint(60, 70), random.randint(307,310)))
-        eoee = font.render("!!!!!!!!!", True, COLORS['RED'])
-        self.screen.blit(eoee, (random.randint(60, 70), random.randint(197,200)))
+        game_over_2 = font.render("!!!!!!!!!", True, COLORS['RED'])
+        self.screen.blit(game_over_2, (random.randint(60, 70), random.randint(307,310)))
+        game_over_3 = font.render("!!!!!!!!!", True, COLORS['RED'])
+        self.screen.blit(game_over_3, (random.randint(60, 70), random.randint(197,200)))
         
