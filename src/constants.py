@@ -18,6 +18,7 @@ COLORS = {
     'YELLOW': (255, 255, 0),
     'PURPLE': (128, 0, 128),
     'DARK_PURPLE': (64, 0, 64),
+    'PROJECTILE': (0, 0, 0),
 }
 
 # Player configuration

@@ -134,6 +134,7 @@ class Player:
             1 + PLAYER['PROJECTILE']['VARIATION']
         )
         projectile_config['SPEED'] *= speed_variation
+        projectile_config['COLOR'] = COLORS['PROJECTILE']
         
         projectile = Projectile(
             self.rect.center, 

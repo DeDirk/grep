@@ -13,7 +13,14 @@ class Projectile:
         """
         self.radius = config['RADIUS']
         self.speed = config['SPEED']
-        self.color = config['COLOR']
+        self.color_key = 'PROJECTILE'  # Always use PROJECTILE for player projectiles
+        if config['COLOR'] == COLORS['RED']:
+            self.color_key = 'RED'
+        elif config['COLOR'] == COLORS['PURPLE']:
+            self.color_key = 'PURPLE'
+        elif config['COLOR'] == COLORS['DARK_PURPLE']:
+            self.color_key = 'DARK_PURPLE'
+        
         self.from_enemy = False
         self.hits = 0
         self.max_hits = 1
@@ -27,11 +34,17 @@ class Projectile:
         # Create rect and image
         self.rect = pygame.Rect(pos[0] - self.radius, pos[1] - self.radius, 
                              self.radius * 2, self.radius * 2)
-        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)
+        self.update_image()
         
         # Calculate velocity
         self.velocity = (direction[0] * self.speed, direction[1] * self.speed)
+
+    def update_image(self):
+        """Update the projectile's image with current color"""
+        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+        current_color = COLORS[self.color_key]
+        print(f"Projectile color: {current_color}")  # Debug print
+        pygame.draw.circle(self.image, current_color, (self.radius, self.radius), self.radius)
 
     def move(self):
         self.rect.move_ip(self.velocity[0], self.velocity[1])
@@ -52,5 +65,4 @@ class Projectile:
         self.rect.size = (self.radius * 2, self.radius * 2)
         self.rect.center = old_center
         # Update image size
-        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, self.color, (self.radius, self.radius), self.radius)
+        self.update_image()
