@@ -7,8 +7,8 @@ L = Toggle dark mode
 Controls Controller:
 Left stick: Movement
 Right stick: Aim
-R1: Shoot
-L1: Boost (watch stamina)
-START = Toggle dark mode
+R1/RB: Shoot
+L1/LB: Boost (watch stamina)
+OPTIONS/MENU = Toggle dark mode
 
 To restart close and reopen
