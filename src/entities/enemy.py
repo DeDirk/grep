@@ -104,20 +104,52 @@ class Enemy:
     def transition_to_next_phase(self):
         self.current_phase += 1
         if self.current_phase <= self.max_phases:
-            self.current_health = self.phase_health[self.current_phase]
-            self.state = self.phase_states[self.current_phase][0]
-            
-            # Create phase change effect
-            self.game.effect_manager.create_phase_change_effect(
-                self.rect.centerx,
-                self.rect.centery
-            )
-            
-            # Add transition variables
-            self.phase_transition_start = pygame.time.get_ticks()
-            self.phase_transition_duration = 1500  # 1.5 seconds pause
-            self.in_phase_transition = True
-            self.transition_color = COLORS['RED']  # Starting color
+            if self.current_phase == 3:
+                # Create split enemies
+                split_health = self.phase_health[self.current_phase] // 2
+                
+                # Create phase 1 split
+                phase1_enemy = SplitEnemy(
+                    self.game,
+                    (self.rect.centerx - 50, self.rect.centery),
+                    'phase1',
+                    split_health
+                )
+                
+                # Create phase 2 split
+                phase2_enemy = SplitEnemy(
+                    self.game,
+                    (self.rect.centerx + 50, self.rect.centery),
+                    'phase2',
+                    split_health
+                )
+                
+                # Add split enemies to game
+                self.game.split_enemies = [phase1_enemy, phase2_enemy]
+                
+                # Create phase change effect
+                self.game.effect_manager.create_phase_change_effect(
+                    self.rect.centerx,
+                    self.rect.centery
+                )
+                
+                # Remove original enemy
+                self.game.enemy = None
+            else:
+                # Normal phase transition logic
+                self.current_health = self.phase_health[self.current_phase]
+                self.state = self.phase_states[self.current_phase][0]
+                
+                # Create phase change effect
+                self.game.effect_manager.create_phase_change_effect(
+                    self.rect.centerx,
+                    self.rect.centery
+                )
+                 # Add transition variables
+                self.phase_transition_start = pygame.time.get_ticks()
+                self.phase_transition_duration = 1500  # 1.5 seconds pause
+                self.in_phase_transition = True
+                self.transition_color = COLORS['RED']  # Starting color
 
     def update_state(self):
         current_time = pygame.time.get_ticks()
@@ -617,4 +649,92 @@ class Enemy:
     def interpolate_color(self, color1, color2, factor):
         """Interpolate between two colors based on a factor (0-1)"""
         return tuple(int(color1[i] + (color2[i] - color1[i]) * factor) for i in range(3))
+
+# Add to src/entities/enemy.py
+class SplitEnemy(Enemy):
+    def __init__(self, game, position, enemy_type, health):
+        # Set this before calling parent __init__
+        self.enemy_type = enemy_type  
+        
+        # Call the parent (Enemy) class's __init__
+        super().__init__(game)
+        
+        # Override specific attributes for split enemy
+        self.radius = ENEMY['RADIUS'] * 0.7  # Slightly smaller than original
+        self.current_health = health
+        
+        # Set position
+        self.rect.center = position
+        
+        # State management specific to split enemies
+        if enemy_type == 'phase1':
+            self.phase_states = {
+                1: ["move_towards_player", "sweep_towards_player", "dash_toward_player"]
+            }
+            self.current_phase = 1
+        else:  # phase2
+            self.phase_states = {
+                2: ["middle_shoot", "movement_5", "movement_6"]
+            }
+            self.current_phase = 2
+        
+        self.state = random.choice(self.phase_states[self.current_phase])
+        self.last_state_change = pygame.time.get_ticks()
+        self.next_state_change = random.randint(3000, 8000)
+        
+        # Update image with appropriate color
+        self.update_image()
+
+    def move(self, player_position, walls=None):
+        """Override move method to ensure split enemies maintain their specific movesets"""
+        if self.enemy_type == 'phase1':
+            # Phase 1 movements only
+            if self.state == "move_towards_player":
+                self.move_towards_player(player_position, walls)
+            elif self.state == "sweep_towards_player":
+                self.sweep_towards_player(player_position, walls)
+            elif self.state == "dash_toward_player":
+                self.dash_toward_player(player_position, walls)
+            return []  # Phase 1 doesn't shoot projectiles
+        else:
+            # Phase 2 movements only
+            new_projectiles = []
+            if self.state == "middle_shoot":
+                new_projectiles = self.middle_shoot(player_position)
+            elif self.state == "movement_5":
+                new_projectiles = self.movement_5(player_position)
+            elif self.state == "movement_6":
+                new_projectiles = self.movement_6(player_position)
+            return new_projectiles
+
+    def update_state(self):
+        """Override update_state to ensure split enemies maintain their specific states"""
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_state_change >= self.next_state_change:
+            old_state = self.state
+            self.state = random.choice(self.phase_states[self.current_phase])
+            if old_state != self.state:
+                # Create movement change effect
+                self.game.effect_manager.create_movement_change_effect(
+                    self.rect.centerx,
+                    self.rect.centery
+                )
+            self.last_state_change = current_time
+            self.next_state_change = random.randint(3000, 8000)
+
+    def update_image(self, color=None):
+        if color is None:
+            # Check if enemy_type is defined before using it
+            if hasattr(self, 'enemy_type'):
+                color = COLORS['PURPLE'] if self.enemy_type == 'phase2' else COLORS['RED']
+            else:
+                color = COLORS['RED']  # Fallback color if enemy_type is not set
+        
+        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, color, (self.radius, self.radius), self.radius)
+        self.rect = self.image.get_rect(center=self.rect.center if self.rect else (0, 0))
+
+    def take_damage(self, damage):
+        self.current_health -= damage
+        return self.current_health <= 0  # Return True if enemy is defeated
 

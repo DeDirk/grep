@@ -60,7 +60,7 @@ ENEMY = {
     'HEALTH': {
         'PHASE_1': 1000,
         'PHASE_2': 1000,
-        'PHASE_3': 1000,
+        'PHASE_3': 750,
     },
     'MOVEMENT': {
         'BASE_SPEED': 6,
@@ -106,7 +106,7 @@ ENEMY = {
         }
     },
     'WALL_INTERACTION': {
-        'SLOWDOWN_FACTOR': 0.001,
+        'SLOWDOWN_FACTOR': 0.01,
     },
     'PHASE_TRANSITION': {
         'DURATION': 1500,

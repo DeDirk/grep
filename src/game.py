@@ -59,16 +59,25 @@ class Game:
             visible_walls = self.level_generator.get_visible_walls(self.camera.x, self.camera.y)
             
             self.player.move(visible_walls)
-            new_projectiles = self.enemy.move(self.player.rect.center, visible_walls)
-            if new_projectiles:
-                self.projectiles.extend(new_projectiles)
+            
+            # Handle either main enemy or split enemies
+            if self.enemy:
+                new_projectiles = self.enemy.move(self.player.rect.center, visible_walls)
+                if new_projectiles:
+                    self.projectiles.extend(new_projectiles)
+                # Check player-enemy collision with main enemy
+                handle_player_enemy_collision(self.player, self.enemy)
+            elif self.split_enemies:
+                for split_enemy in self.split_enemies:
+                    new_projectiles = split_enemy.move(self.player.rect.center, visible_walls)
+                    if new_projectiles:
+                        self.projectiles.extend(new_projectiles)
+                    # Check player-enemy collision with each split enemy
+                    handle_player_enemy_collision(self.player, split_enemy)
+            
             self.update_items()
             self.spawn_items()
-            
             self.update_projectiles()
-            
-            # Check player-enemy collision
-            handle_player_enemy_collision(self.player, self.enemy)
             
             self.camera.update(self.player.rect)
             self.level_generator.update(self.camera.x, self.camera.y)
@@ -108,7 +117,6 @@ class Game:
         """Update all projectiles and handle collisions"""
         visible_walls = self.level_generator.get_visible_walls(self.camera.x, self.camera.y)
         
-        # Update all projectiles
         i = 0
         while i < len(self.projectiles):
             projectile = self.projectiles[i]
@@ -127,11 +135,10 @@ class Game:
                     if (not projectile.from_enemy and 
                         other_projectile.from_enemy and 
                         handle_projectile_projectile_collision(projectile, other_projectile)):
-                        # Remove player projectile
+                        # Handle projectile collision
                         if projectile in self.projectiles:
                             self.projectiles.remove(projectile)
                             i -= 1
-                        # Shrink enemy projectile
                         other_projectile.radius *= other_projectile.shrink_rate
                         if other_projectile.radius <= other_projectile.min_size:
                             if other_projectile in self.projectiles:
@@ -148,11 +155,23 @@ class Game:
                 i += 1
                 continue
             
-            # Check collision with enemy (if player projectile)
+            # Check collision with enemies (if player projectile)
             if not projectile.from_enemy:
-                if handle_projectile_enemy_collision(projectile, self.enemy, self.effect_manager):
-                    if projectile in self.projectiles:
-                        self.projectiles.remove(projectile)
+                hit_enemy = False
+                if self.enemy:
+                    if handle_projectile_enemy_collision(projectile, self.enemy, self.effect_manager):
+                        hit_enemy = True
+                elif self.split_enemies:
+                    for split_enemy in self.split_enemies[:]:  # Use slice copy to safely modify during iteration
+                        if handle_projectile_enemy_collision(projectile, split_enemy, self.effect_manager):
+                            hit_enemy = True
+                            # Remove split enemy if health depleted
+                            if split_enemy.current_health <= 0:
+                                self.split_enemies.remove(split_enemy)
+                            break
+                
+                if hit_enemy and projectile in self.projectiles:
+                    self.projectiles.remove(projectile)
                     continue
             
             # Check collision with player (if enemy projectile)
@@ -248,11 +267,19 @@ class Game:
             wall_rect = self.camera.apply(wall)
             pygame.draw.rect(self.screen, COLORS['BLACK'], wall_rect)
         
-        # Apply camera offset to all game objects
+        # Apply camera offset to player
         player_rect = self.camera.apply(self.player.rect)
-        enemy_rect = self.camera.apply(self.enemy.rect)
         
-        self.screen.blit(self.enemy.image, enemy_rect)
+        # Draw either main enemy or split enemies
+        if self.enemy:
+            enemy_rect = self.camera.apply(self.enemy.rect)
+            self.screen.blit(self.enemy.image, enemy_rect)
+        elif self.split_enemies:
+            for split_enemy in self.split_enemies:
+                split_enemy_rect = self.camera.apply(split_enemy.rect)
+                self.screen.blit(split_enemy.image, split_enemy_rect)
+        
+        # Draw player
         self.screen.blit(self.player.image, player_rect)
         
         # Draw stamina bar
@@ -260,20 +287,22 @@ class Game:
         # draw health bar
         self.player.draw_health_bar(self.screen, self.camera)
         
+        # Draw projectiles
         for projectile in self.projectiles:
             proj_rect = self.camera.apply(projectile.rect)
             self.screen.blit(projectile.image, proj_rect)
-            
+        
+        # Draw items    
         for item in self.items:
             item_rect = self.camera.apply(item.rect)
             self.screen.blit(item.image, item_rect)
-            
+        
         # Draw effects after game objects so they appear on top
         self.effect_manager.draw(self.screen, self.camera.x, self.camera.y)
         
         if self.player.died:
             self.render_game_over()
-            
+        
         pygame.display.update()
         
     def render_game_over(self):
