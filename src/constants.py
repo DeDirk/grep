@@ -167,11 +167,18 @@ CONTROLLER = {
         'LEFTBUMPER': 9,
         'RIGHTBUMPER': 10,
     },
-    'ACTIONS': {
+    'ACTIONSDS4': {
         'SHOOT': 'RIGHTBUMPER',
         'SPRINT': 'LEFTBUMPER',
         'ACTION': 'X',
         'MENU': 'START'
+    },
+    # These names are not correct, need to fix structure so it works for both controllers
+    'ACTIONS360': {
+        'SHOOT': 'GUIDE',
+        'SPRINT': 'BACK',
+        'ACTION': 'X',
+        'MENU': 'LEFTSTICK'
     },
     'INPUT': {
         'STICK_DEADZONE': 0.01,

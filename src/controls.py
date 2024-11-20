@@ -7,6 +7,7 @@ from src.constants import CONTROLLER
 class Controls:
     def __init__(self):
         self.controllers = []
+        self.controller_type = None  # Will store 'DS4' or '360'
         self.init_controllers()
         self.rumble_end_time = 0
         self.last_aim_direction = (1, 0)
@@ -18,6 +19,15 @@ class Controls:
             for i in range(pygame.joystick.get_count()):
                 controller = pygame.joystick.Joystick(i)
                 controller.init()
+                
+                # Detect controller type based on name
+                name = controller.get_name().lower()
+                if 'xbox' in name or '360' in name:
+                    self.controller_type = '360'
+                    print("Xbox controller detected")
+                else:
+                    self.controller_type = 'DS4'  # Default to DS4
+                    print("DualShock controller detected")
 
                 for j in range(controller.get_numbuttons()):
                     state = controller.get_button(j)
@@ -32,7 +42,10 @@ class Controls:
             
         try:
             controller = self.controllers[0]
-            button_name = CONTROLLER['ACTIONS'].get(action)
+            # Use appropriate action mapping based on controller type
+            actions_map = CONTROLLER['ACTIONS360'] if self.controller_type == '360' else CONTROLLER['ACTIONSDS4']
+            button_name = actions_map.get(action)
+            # print(self.controller_type)
             if not button_name:
                 return False
                 
@@ -191,7 +204,12 @@ class Controls:
             
         try:
             controller = self.controllers[0]
-            button_pressed = controller.get_button(CONTROLLER['BUTTONS']['START'])
+            # Use appropriate action mapping based on controller type
+            actions_map = CONTROLLER['ACTIONS360'] if self.controller_type == '360' else CONTROLLER['ACTIONSDS4']
+            button_name = actions_map.get('MENU')
+            button_id = CONTROLLER['BUTTONS'].get(button_name)
+            
+            button_pressed = controller.get_button(button_id)
             
             # Only return True on the initial press
             if button_pressed and not self.menu_pressed:
