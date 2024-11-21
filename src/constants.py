@@ -58,8 +58,8 @@ PLAYER = {
 ENEMY = {
     'RADIUS': 50,
     'HEALTH': {
-        'PHASE_1': 10,
-        'PHASE_2': 100,
+        'PHASE_1': 1000,
+        'PHASE_2': 1000,
         'PHASE_3': 750,
     },
     'MOVEMENT': {
