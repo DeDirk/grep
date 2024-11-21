@@ -1,5 +1,3 @@
-# grep
-
 Controls Keyboard & Mouse:
 WASD : UP - LEFT - RIGHT - DOWN
 SHIFT : BOOST (WATCH STAMINA BAR ABOVE PLAYER)
@@ -15,7 +13,7 @@ OPTIONS/MENU = Toggle dark mode
 
 To restart close and reopen
 
-## Building game or running code
+To build yourself:
 Install Python 3.9
 Install pygame package (pip install pygame)
 Run run_game.py for cmd or IDE of choice.
