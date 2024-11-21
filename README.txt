@@ -1,3 +1,5 @@
+# grep
+
 Controls Keyboard & Mouse:
 WASD : UP - LEFT - RIGHT - DOWN
 SHIFT : BOOST (WATCH STAMINA BAR ABOVE PLAYER)
@@ -12,3 +14,9 @@ L1/LB: Boost (watch stamina)
 OPTIONS/MENU = Toggle dark mode
 
 To restart close and reopen
+
+## Building game or running code
+Install Python 3.9
+Install pygame package (pip install pygame)
+Run run_game.py for cmd or IDE of choice.
+It's advised to install in a separate environment
