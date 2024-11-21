@@ -36,10 +36,11 @@ class Game:
         self.screen = pygame.display.set_mode((WINDOW['WIDTH'], WINDOW['HEIGHT']))
         self.clock = pygame.time.Clock()
         self.running = True
+        self.settings = Settings()
         
         # Add menu states
-        self.state = "START_MENU"  # Can be: START_MENU, PLAYING, GAME_OVER, VICTORY
-        self.menu = Menu(self.screen)
+        self.state = "START_MENU"
+        self.menu = Menu(self.screen, self.settings)
         self.setup_menus()
         
         # Game objects (only initialize when starting game)
@@ -48,7 +49,6 @@ class Game:
         self.projectiles = []
         self.items = []
         self.level_generator = None
-        self.settings = Settings()
         self.camera = None
         self.effect_manager = None
 
@@ -124,19 +124,22 @@ class Game:
     def setup_menus(self):
         """Initialize different menu configurations"""
         if self.state == "START_MENU":
-            self.menu = Menu(self.screen)
+            self.menu = Menu(self.screen, self.settings)
             self.menu.set_title("grep")
             self.menu.add_option("Start Game", self.start_game)
+            self.menu.add_option("Toggle Dark Mode", self.settings.toggle_dark_mode)
             self.menu.add_option("Quit", self.quit_game)
         elif self.state == "GAME_OVER":
-            self.menu = Menu(self.screen)
+            self.menu = Menu(self.screen, self.settings)
             self.menu.set_title("Game Over")
             self.menu.add_option("Try Again", self.start_game)
+            self.menu.add_option("Toggle Dark Mode", self.settings.toggle_dark_mode)
             self.menu.add_option("Quit", self.quit_game)
         elif self.state == "VICTORY":
-            self.menu = Menu(self.screen)
+            self.menu = Menu(self.screen, self.settings)
             self.menu.set_title("You Won!")
             self.menu.add_option("Play Again", self.start_game)
+            self.menu.add_option("Toggle Dark Mode", self.settings.toggle_dark_mode)
             self.menu.add_option("Quit", self.quit_game)
 
     def start_game(self):
@@ -149,7 +152,7 @@ class Game:
         self.level_generator = LevelGenerator(WINDOW['WIDTH'], WINDOW['HEIGHT'])
         self.camera = Camera()
         self.effect_manager = EffectManager()
-        self.settings = Settings()
+
         self.item_spawn_chance = ITEMS['SPAWN']['CHANCE']
 
     def quit_game(self):

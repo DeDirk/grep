@@ -198,10 +198,19 @@ class Controls:
             self.rumble_end_time = 0
 
     def get_menu_press(self):
-        """Get menu button press with state tracking"""
+        """Get menu button press with state tracking (controller or keyboard)"""
+        # Check keyboard L key
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_l] and not self.menu_pressed:
+            self.menu_pressed = True
+            return True
+        
+        # Check controller
         if not self.controllers:
+            if not keys[pygame.K_l]:  # Reset state if L key is released
+                self.menu_pressed = False
             return False
-            
+        
         try:
             controller = self.controllers[0]
             # Use appropriate action mapping based on controller type
@@ -212,10 +221,10 @@ class Controls:
             button_pressed = controller.get_button(button_id)
             
             # Only return True on the initial press
-            if button_pressed and not self.menu_pressed:
+            if (button_pressed or keys[pygame.K_l]) and not self.menu_pressed:
                 self.menu_pressed = True
                 return True
-            elif not button_pressed:
+            elif not button_pressed and not keys[pygame.K_l]:
                 self.menu_pressed = False
                 
             return False
@@ -228,6 +237,12 @@ class Controls:
         current_time = pygame.time.get_ticks()
         if current_time < menu.input_cooldown:
             return False
+
+        # Check for menu/options button press
+        if self.get_menu_press() and menu.settings:
+            menu.settings.toggle_dark_mode()
+            menu.input_cooldown = current_time + menu.cooldown_duration
+            return True
 
         # Handle mouse input first
         mouse_pos = pygame.mouse.get_pos()
@@ -295,3 +310,7 @@ class Controls:
             print(f"Menu input error: {e}")
         
         return False
+
+    def reset_menu_state(self):
+        """Reset the menu button state tracking"""
+        self.menu_pressed = False

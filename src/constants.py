@@ -89,8 +89,8 @@ ENEMY = {
             'MIN_SIZE': 1,
         },
         'PHASE_TWO': {
-            'RADIUS': 30,
-            'SPEED': 4,
+            'RADIUS': 20,
+            'SPEED': 3,
             'COLOR': COLORS['DARK_PURPLE'],
             'DAMAGE_PER_FRAME': 5,
             'SHRINK_RATE': 0.9,
@@ -190,6 +190,19 @@ CONTROLLER = {
         'HIGH_FREQ': 0.0,
     },
     'DEBUG': False
+}
+
+MENU = {
+    'LIGHT_MODE': {
+        'TEXT_COLOR': COLORS['GRAY'],
+        'SELECTED_COLOR': COLORS['BLACK'],
+        'MENU_BG': COLORS['WHITE'],
+    },
+    'DARK_MODE': {
+        'TEXT_COLOR': COLORS['GRAY'],
+        'SELECTED_COLOR': COLORS['WHITE'],
+        'MENU_BG': COLORS['BLACK'],
+    }
 }
 
 EFFECTS = {
