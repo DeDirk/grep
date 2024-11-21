@@ -2,7 +2,7 @@ import random
 
 import pygame
 
-from src.constants import CONTROLLER
+from src.constants import CONTROLLER, WINDOW
 
 class Controls:
     def __init__(self):
@@ -222,3 +222,76 @@ class Controls:
         except Exception as e:
             print(f"Menu button error: {e}")
             return False
+
+    def handle_menu_input(self, menu):
+        """Handle menu navigation based on controller type and mouse"""
+        current_time = pygame.time.get_ticks()
+        if current_time < menu.input_cooldown:
+            return False
+
+        # Handle mouse input first
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_clicked = pygame.mouse.get_pressed()[0]  # Left click
+
+        # Calculate option positions (matching the render logic in Menu class)
+        for i, (text, callback) in enumerate(menu.options):
+            text_rect = menu.font_small.render(text, True, menu.text_color).get_rect(
+                center=(WINDOW['WIDTH'] // 2, 300 + i * 60)
+            )
+            # Check if mouse is hovering over this option
+            if text_rect.collidepoint(mouse_pos):
+                menu.selected_option = i
+                if mouse_clicked:
+                    callback()  # Call the callback function
+                    menu.input_cooldown = current_time + menu.cooldown_duration
+                    return True
+
+        # If no mouse interaction, check controller
+        if not self.controllers:
+            return False
+
+        try:
+            controller = self.controllers[0]
+            input_detected = False
+
+            if self.controller_type == '360':
+                # D-pad for Xbox controller
+                dpad = controller.get_hat(0)
+                if dpad[1] == 1:  # Up
+                    menu.selected_option = (menu.selected_option - 1) % len(menu.options)
+                    input_detected = True
+                elif dpad[1] == -1:  # Down
+                    menu.selected_option = (menu.selected_option + 1) % len(menu.options)
+                    input_detected = True
+            else:  # DS4
+                # D-pad buttons for DualShock
+                if controller.get_button(11):  # Up
+                    menu.selected_option = (menu.selected_option - 1) % len(menu.options)
+                    input_detected = True
+                elif controller.get_button(12):  # Down
+                    menu.selected_option = (menu.selected_option + 1) % len(menu.options)
+                    input_detected = True
+
+            # Left stick (common for both controllers)
+            if abs(controller.get_axis(1)) > CONTROLLER['INPUT']['STICK_DEADZONE']:
+                if controller.get_axis(1) < -0.5:  # Up
+                    menu.selected_option = (menu.selected_option - 1) % len(menu.options)
+                    input_detected = True
+                elif controller.get_axis(1) > 0.5:  # Down
+                    menu.selected_option = (menu.selected_option + 1) % len(menu.options)
+                    input_detected = True
+
+            # Select button (X for DS4, A for Xbox)
+            select_button = 0 if self.controller_type == 'DS4' else 0
+            if controller.get_button(select_button):
+                menu.options[menu.selected_option][1]()  # Call the callback function
+                input_detected = True
+
+            if input_detected:
+                menu.input_cooldown = current_time + menu.cooldown_duration
+                return True
+
+        except Exception as e:
+            print(f"Menu input error: {e}")
+        
+        return False

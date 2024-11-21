@@ -28,6 +28,7 @@ from src.utils.collision import (
 )
 from src.effects.effect_manager import EffectManager
 from src.settings import Settings
+from src.menu import Menu
 
 class Game:
     def __init__(self):
@@ -35,23 +36,21 @@ class Game:
         self.screen = pygame.display.set_mode((WINDOW['WIDTH'], WINDOW['HEIGHT']))
         self.clock = pygame.time.Clock()
         self.running = True
-
-        # Game objects
-        self.player = Player(self)
-        self.enemy = Enemy(self)
+        
+        # Add menu states
+        self.state = "START_MENU"  # Can be: START_MENU, PLAYING, GAME_OVER, VICTORY
+        self.menu = Menu(self.screen)
+        self.setup_menus()
+        
+        # Game objects (only initialize when starting game)
+        self.player = None
+        self.enemy = None
         self.projectiles = []
         self.items = []
-        self.level_generator = LevelGenerator(WINDOW['WIDTH'], WINDOW['HEIGHT'])
-
-        # Game settings
+        self.level_generator = None
         self.settings = Settings()
-        self.item_spawn_chance = ITEMS['SPAWN']['CHANCE']
-        
-        # Camera
-        self.camera = Camera()
-
-        # Add effect manager
-        self.effect_manager = EffectManager()
+        self.camera = None
+        self.effect_manager = None
 
     def update(self):
         """Main game update loop"""
@@ -59,6 +58,12 @@ class Game:
             visible_walls = self.level_generator.get_visible_walls(self.camera.x, self.camera.y)
             
             self.player.move(visible_walls)
+            
+            # Check for victory condition
+            if not self.enemy and not getattr(self, 'split_enemies', []):
+                self.state = "VICTORY"
+                self.setup_menus()
+                return
             
             # Handle either main enemy or split enemies
             if self.enemy:
@@ -86,32 +91,70 @@ class Game:
     def run(self):
         while self.running:
             self.handle_events()
-            self.update()
-            self.render()
+            
+            if self.state == "PLAYING":
+                self.update()
+                self.render()
+            else:
+                self.menu.render()
+                
             self.clock.tick(WINDOW['FPS'])
 
     def handle_events(self):
+        """Event handler"""
         for event in pygame.event.get():
             if event.type == QUIT:
                 self.running = False
-            
-            # Check for key press to toggle dark mode
-            if event.type == KEYDOWN:
-                if event.key == K_l:  # 'L' key is used to toggle dark mode
+
+        # Handle menu states
+        if self.state in ["START_MENU", "GAME_OVER", "VICTORY"]:
+            # Try controller input first
+            if not self.menu.controls.handle_menu_input(self.menu):
+                # Fall back to keyboard if no controller input handled
+                self.menu.handle_input()
+        else:
+            # Handle regular game input
+            if self.player:
+                if self.player.controls.get_menu_press():
                     self.settings.toggle_dark_mode()
-            
-        # Check controller start button for dark mode toggle
-        if self.player.controls.get_menu_press():  # Use new method
-            self.settings.toggle_dark_mode()
-        
-        if self.player.controls.is_shooting():
-            projectile = self.player.shoot((self.camera.x, self.camera.y))
-            self.projectiles.append(projectile)
-        #     if projectile.using_controller:
-        #         self.player.controls.start_rumble()
-        
-        # self.player.controls.update_rumble()
-        
+                if self.player.controls.is_shooting():
+                    projectile = self.player.shoot((self.camera.x, self.camera.y))
+                    self.projectiles.append(projectile)
+
+    def setup_menus(self):
+        """Initialize different menu configurations"""
+        if self.state == "START_MENU":
+            self.menu = Menu(self.screen)
+            self.menu.set_title("grep")
+            self.menu.add_option("Start Game", self.start_game)
+            self.menu.add_option("Quit", self.quit_game)
+        elif self.state == "GAME_OVER":
+            self.menu = Menu(self.screen)
+            self.menu.set_title("Game Over")
+            self.menu.add_option("Try Again", self.start_game)
+            self.menu.add_option("Quit", self.quit_game)
+        elif self.state == "VICTORY":
+            self.menu = Menu(self.screen)
+            self.menu.set_title("You Won!")
+            self.menu.add_option("Play Again", self.start_game)
+            self.menu.add_option("Quit", self.quit_game)
+
+    def start_game(self):
+        """Initialize or reset the game state"""
+        self.state = "PLAYING"
+        self.player = Player(self)
+        self.enemy = Enemy(self)
+        self.projectiles = []
+        self.items = []
+        self.level_generator = LevelGenerator(WINDOW['WIDTH'], WINDOW['HEIGHT'])
+        self.camera = Camera()
+        self.effect_manager = EffectManager()
+        self.settings = Settings()
+        self.item_spawn_chance = ITEMS['SPAWN']['CHANCE']
+
+    def quit_game(self):
+        """Exit the game"""
+        self.running = False
 
     def update_projectiles(self):
         """Update all projectiles and handle collisions"""
@@ -301,16 +344,7 @@ class Game:
         self.effect_manager.draw(self.screen, self.camera.x, self.camera.y)
         
         if self.player.died:
-            self.render_game_over()
+            self.state = "GAME_OVER"
+            self.setup_menus()
         
         pygame.display.update()
-        
-    def render_game_over(self):
-        font = pygame.font.SysFont("Verdana", 60)
-        game_over = font.render("you died fuckface", True, COLORS['RED'])
-        self.screen.blit(game_over, (random.randint(27, 30), random.randint(247,250)))
-        game_over_2 = font.render("!!!!!!!!!", True, COLORS['RED'])
-        self.screen.blit(game_over_2, (random.randint(60, 70), random.randint(307,310)))
-        game_over_3 = font.render("!!!!!!!!!", True, COLORS['RED'])
-        self.screen.blit(game_over_3, (random.randint(60, 70), random.randint(197,200)))
-        

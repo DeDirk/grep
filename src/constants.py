@@ -31,7 +31,7 @@ PLAYER = {
         'DECELERATION': 1,
     },
     'HEALTH': {
-        'MAX': 60,
+        'MAX': 100,
         'DAMAGE_PER_FRAME': 1,
     },
     'STAMINA': {
@@ -58,8 +58,8 @@ PLAYER = {
 ENEMY = {
     'RADIUS': 50,
     'HEALTH': {
-        'PHASE_1': 1000,
-        'PHASE_2': 1000,
+        'PHASE_1': 10,
+        'PHASE_2': 100,
         'PHASE_3': 750,
     },
     'MOVEMENT': {
@@ -92,7 +92,7 @@ ENEMY = {
             'RADIUS': 30,
             'SPEED': 4,
             'COLOR': COLORS['DARK_PURPLE'],
-            'DAMAGE_PER_FRAME': 8,
+            'DAMAGE_PER_FRAME': 5,
             'SHRINK_RATE': 0.9,
             'MIN_SIZE': 2,
         },
@@ -100,7 +100,7 @@ ENEMY = {
             'RADIUS': 25,
             'SPEED': 10,
             'COLOR': COLORS['PURPLE'],
-            'DAMAGE_PER_FRAME': 10,
+            'DAMAGE_PER_FRAME': 5,
             'SHRINK_RATE': 0.85,
             'MIN_SIZE': 1,
         }

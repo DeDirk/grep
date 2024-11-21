@@ -205,16 +205,16 @@ class Enemy:
             new_projectiles = self.movement_6(player_position)
             
         # Phase 3 movements
-        elif self.state == "movement_7":
-            self.movement_7(player_position)
-        elif self.state == "movement_8":
-            self.movement_8(player_position)
-        elif self.state == "movement_9":
-            self.movement_9(player_position)
+        # elif self.state == "movement_7":
+        #     self.movement_7(player_position)
+        # elif self.state == "movement_8":
+        #     self.movement_8(player_position)
+        # elif self.state == "movement_9":
+        #     self.movement_9(player_position)
         
         return new_projectiles
     
-    def orbit_around_point(self, center_point, orbit_radius=300, rotation_speed=0.05):
+    def orbit_around_point(self, center_point, orbit_radius=375, rotation_speed=0.02):
         """
         Makes the enemy orbit around a given point.
         Returns the enemy's current orbit angle.
