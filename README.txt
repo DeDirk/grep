@@ -11,8 +11,6 @@ R1/RB: Shoot
 L1/LB: Boost (watch stamina)
 OPTIONS/MENU = Toggle dark mode
 
-To restart close and reopen
-
 To build yourself:
 Install Python 3.9
 Install pygame package (pip install pygame)
